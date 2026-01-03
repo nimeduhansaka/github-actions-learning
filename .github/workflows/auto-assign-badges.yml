@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened]
   issues:
-    types: [opened]
+    types: [opened, closed]
 
 jobs:
   auto-assign-and-label:
@@ -130,3 +130,70 @@ jobs:
               issue_number: context.issue.number,
               body: `🎖️ **Badge Submission Tracking Issue Created!**\n\nYour badge submission is being tracked.\n\n**Status:** Pending Review ⏳\n**Assigned to:** @nisalgunawardhana\n**Expected Review Time:** 2-5 days\n\n✅ **Next Steps:**\n1. Ensure your PR is linked above\n2. Verify all evidence is in the PR\n3. Wait for review and feedback\n\nWe'll notify you as soon as the review is complete! 🚀`
             });
+
+  # Auto-assign badge on issue closure
+  issue-closed-badge:
+    if: github.event.action == 'closed' && github.event.issue != null && github.actor == 'nisalgunawardhana'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Check if submission issue
+        id: check-submission
+        run: |
+          if [[ "${{ github.event.issue.title }}" == *"🎖️"* ]] || [[ "${{ github.event.issue.title }}" == *"Badge"* ]] || [[ "${{ github.event.issue.title }}" == *"submission"* ]]; then
+            echo "is_submission=true" >> $GITHUB_OUTPUT
+          fi
+
+      # Determine badge level from issue body "My Level:" field
+      - name: Determine badge level
+        id: badge-level
+        run: |
+          body="${{ github.event.issue.body }}"
+          # Extract level from "**My Level:**" field
+          if [[ "$body" =~ \*\*My\ Level:\*\*[[:space:]]*([a-zA-Z]+) ]]; then
+            level="${BASH_REMATCH[1]}"
+            level_lower=$(echo "$level" | tr '[:upper:]' '[:lower:]')
+            if [[ "$level_lower" == "beginner" ]]; then
+              echo "level=beginner" >> $GITHUB_OUTPUT
+              echo "badge_label=🟢-Beginner" >> $GITHUB_OUTPUT
+            elif [[ "$level_lower" == "intermediate" ]]; then
+              echo "level=intermediate" >> $GITHUB_OUTPUT
+              echo "badge_label=🟡-Intermediate" >> $GITHUB_OUTPUT
+            elif [[ "$level_lower" == "advanced" ]]; then
+              echo "level=advanced" >> $GITHUB_OUTPUT
+              echo "badge_label=🔴-Advanced" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      # Add completed badge label
+      - name: Add completion badge
+        if: steps.check-submission.outputs.is_submission == 'true' && steps.badge-level.outputs.level != ''
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['reviewed', 'completed', '${{ steps.badge-level.outputs.level }}']
+            });
+
+      # Add completion comment
+      - name: Add completion comment
+        if: steps.check-submission.outputs.is_submission == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const badge = '${{ steps.badge-level.outputs.badge_label }}' || '✅';
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `✅ **Issue Closed - Badge Awarded!**\n\n${badge}\n\n**Status:** Reviewed and Successfully Completed 🎉\n\nCongratulations! Your submission has been reviewed and successfully completed. You have earned this badge!\n\n📌 **Achievement Unlocked:** ${{ steps.badge-level.outputs.level || 'Badge' }}\n\nGreat work! Keep contributing and earning more badges! 🚀`
+            });
+
