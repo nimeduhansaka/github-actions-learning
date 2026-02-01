@@ -1,20 +1,11 @@
-name: Custom CI
+name: Node.js CI
 
 on:
   push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
-  workflow_dispatch:
-    inputs:
-      trigger_reason:
-        description: "Reason for running this workflow manually"
-        required: true
-        default: "Manual testing"
+    branches: ["develop"]
 
 jobs:
-  build-and-test:
-    name: Build & Test App
+  build:
     runs-on: ubuntu-latest
 
     defaults:
@@ -22,34 +13,17 @@ jobs:
         working-directory: ./sample-app
 
     steps:
-      - name: 🚀 Start CI Pipeline
-        run: echo "Starting CI pipeline triggered by ${{ inputs.trigger_reason || 'Push/PR event' }}..."
+      - uses: actions/checkout@v3
 
-      - name: 💻 Print Runner Details
-        run: |
-          echo "Running on OS: ${{ runner.os }}"
-          echo "Node Version: 18 (Planned)"
-
-      - name: 📥 Checkout code
-        uses: actions/checkout@v3
-
-      - name: ⚙️ Set up Node.js
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: 18
           cache: "npm"
           cache-dependency-path: sample-app/package-lock.json
 
-      - name: 📦 Install dependencies
-        run: |
-          echo "Installing dependencies..."
-          npm ci
+      - name: Install dependencies
+        run: npm install
 
-      - name: 🧪 Run tests
-        run: |
-          echo "Running test suite..."
-          npm test
-
-      - name: ✅ Completion
-        if: success()
-        run: echo "Build and tests passed successfully! 🎉"
+      - name: Run tests
+        run: npm test
