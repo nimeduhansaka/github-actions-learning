@@ -8,10 +8,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ./sample-app
-
     steps:
       - uses: actions/checkout@v3
 
@@ -23,7 +19,9 @@ jobs:
           cache-dependency-path: sample-app/package-lock.json
 
       - name: Install dependencies
+        working-directory: ./sample-app
         run: npm install
 
       - name: Run tests
+        working-directory: ./sample-app
         run: npm test
