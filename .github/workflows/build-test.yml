@@ -41,7 +41,7 @@ jobs:
         working-directory: ./sample-app
         env:
           NODE_ENV: development
-        run: npm ci
+        run: npm install
 
       - name: Run linter
         working-directory: ./sample-app
@@ -86,7 +86,7 @@ jobs:
           node-version: "18"
 
       - working-directory: ./sample-app
-        run: npm ci
+        run: npm install
 
       - name: Run ESLint
         working-directory: ./sample-app
