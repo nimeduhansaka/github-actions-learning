@@ -52,6 +52,15 @@ jobs:
         working-directory: ./sample-app
         run: npm run build
 
+      - name: Create artifact
+        run: echo "Build output" > output.txt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-output
+          path: output.txt
+
       - name: Run tests
         working-directory: ./sample-app
         run: npm test
@@ -105,3 +114,19 @@ jobs:
           echo "🎯 Test Run Summary"
           echo "==================="
           echo "✅ All tests completed"
+
+  use-artifact:
+    name: Use Build Artifact
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: build-output
+
+      - name: Display artifact content
+        run: |
+          echo "📦 Downloaded artifact contents:"
+          cat output.txt
