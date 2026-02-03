@@ -9,7 +9,7 @@ app.use(express.static('public'));
 // Routes
 app.get('/', (req, res) => {
   res.json({
-    message: 'Welcome to GitHub Actions Learning App!',
+    message: 'Welcome to GitHub Actions Learning App! 🚀',
     status: 'OK',
     version: '1.1.0'
   });
