@@ -1,0 +1,29 @@
+name: Conditional Workflow
+
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build application
+        run: echo "🔨 Building application..."
+
+      - name: Run tests
+        run: echo "🧪 Running tests..."
+
+      - name: Deploy (main only)
+        if: github.ref == 'refs/heads/main'
+        run: echo "🚀 Deploying to production..."
+
+      - name: Skip deploy message
+        if: github.ref != 'refs/heads/main'
+        run: echo "⏭️ Skipping deployment - not on main branch (current: ${{ github.ref }})"
