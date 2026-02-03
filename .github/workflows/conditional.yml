@@ -26,4 +26,5 @@ jobs:
 
       - name: Skip deploy message
         if: github.ref != 'refs/heads/main'
-        run: echo "⏭️ Skipping deployment - not on main branch (current: ${{ github.ref }})"
+        run: |
+          echo "⏭️ Skipping deployment - not on main branch (current: ${{ github.ref }})"
